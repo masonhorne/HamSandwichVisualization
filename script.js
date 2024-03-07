@@ -53834,38 +53834,27 @@ var camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHei
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
-var geometry = new THREE.BoxGeometry(1, 1, 1);
-var material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-var cube = new THREE.Mesh(geometry, material);
-scene.add(cube);
-camera.position.z = 5;
+scene.background = new THREE.Color(0xFFFFFF);
+// const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+// const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+// const cube = new THREE.Mesh( geometry, material );
+// scene.add( cube );
+camera.position.z = 10;
 function animate() {
     requestAnimationFrame(animate);
-    cube.rotation.x += 0.01;
-    cube.rotation.y += 0.01;
+    // cube.rotation.x += 0.01;
+    // cube.rotation.y += 0.01;
     renderer.render(scene, camera);
 }
 animate();
-// import * as THREE from 'three';
-// const scene = new THREE.Scene();
-// const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-// const renderer = new THREE.WebGLRenderer();
-// renderer.setSize( window.innerWidth, window.innerHeight );
-// document.body.appendChild( renderer.domElement );
-// // const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-// // const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-// // const cube = new THREE.Mesh( geometry, material );
-// // scene.add( cube );
-// // camera.position.z = 5;
-// function animate() {
-// 	requestAnimationFrame( animate );
-// 	renderer.render( scene, camera );
-// }
-// animate();
-// const size = 10;
-// const divisions = 10;
-// const gridHelper = new THREE.GridHelper( size, divisions );
-// scene.add( gridHelper );
-// // console.log('hello world');
+// 2D Grid Setup
+var size = 10;
+var divisions = 10;
+var axisColor = new THREE.Color(0x000000);
+var gridColor = new THREE.Color(0xD3D3D3);
+var gridHelper = new THREE.GridHelper(size, divisions, axisColor, gridColor);
+gridHelper.rotation.x = Math.PI / 2;
+scene.add(gridHelper);
+// TODO: Grid movement controls
 
 },{"three":1}]},{},[2]);

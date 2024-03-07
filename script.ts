@@ -6,26 +6,31 @@ const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.inner
 const renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 document.body.appendChild( renderer.domElement );
+scene.background = new THREE.Color(0xFFFFFF);
 
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-const cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
+// const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+// const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+// const cube = new THREE.Mesh( geometry, material );
+// scene.add( cube );
 
-camera.position.z = 5;
+camera.position.z = 10;
 
 function animate() {
 	requestAnimationFrame( animate );
-
-	cube.rotation.x += 0.01;
-	cube.rotation.y += 0.01;
-
+	// cube.rotation.x += 0.01;
+	// cube.rotation.y += 0.01;
 	renderer.render( scene, camera );
 }
 
 animate();
 
-// const size = 10;
-// const divisions = 10;
-// const gridHelper = new THREE.GridHelper( size, divisions );
-// scene.add( gridHelper );
+// 2D Grid Setup
+const size = 10;
+const divisions = 10;
+const axisColor = new THREE.Color(0x000000);
+const gridColor = new THREE.Color(0xD3D3D3);
+const gridHelper = new THREE.GridHelper( size, divisions, axisColor, gridColor );
+gridHelper.rotation.x = Math.PI / 2;
+scene.add( gridHelper );
+
+// TODO: Grid movement controls
