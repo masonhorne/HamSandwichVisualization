@@ -1,8 +1,9 @@
 {
-    "compilerOptions": {
-      "target": "ES5",
-      "module": "CommonJS",
-      "sourceMap": true,
-      "forceConsistentCasingInFileNames": false
+	"compilerOptions": {
+		"outDir": "dist",
+		"noImplicitAny": true,
+		"target": "es5",
+		"allowJs": true,
+		"experimentalDecorators":true
     }
-  }
+}

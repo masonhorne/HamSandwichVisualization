@@ -2,11 +2,18 @@
   "devDependencies": {
     "@types/node": "^20.11.25",
     "@types/three": "^0.162.0",
-    "typescript": "^5.4.2"
+    "terser-webpack-plugin": "^5.3.10",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.2",
+    "webpack": "^5.90.3",
+    "webpack-cli": "^5.1.4"
   },
   "dependencies": {
-    "browserify": "^17.0.0",
     "three": "^0.162.0",
     "tsify": "^5.0.4"
+  },
+  "scripts": {
+    "build": "npx webpack",
+    "dev": "npx webpack --config webpack.config.dev.js"
   }
 }
