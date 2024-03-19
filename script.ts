@@ -67,3 +67,29 @@ threeDButton.addEventListener('click', () => {
 		gridHelperYZ.visible = false;
 	}
 });
+
+// Oliver is testing how to draw things:
+
+// Draws random points, but they are squares, sadly.
+const vertices = [];
+
+for ( let i = 0; i < 20; i ++ ) {
+	const x = THREE.MathUtils.randFloatSpread( 10 );
+	const y = THREE.MathUtils.randFloatSpread( 10 );
+	const z = THREE.MathUtils.randFloatSpread( 10 );
+
+	vertices.push( x, y, z );
+}
+
+const pointGeom = new THREE.BufferGeometry();
+pointGeom.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+const pointMat = new THREE.PointsMaterial( { size: 0.2, color: 0x888888 } );
+const points = new THREE.Points( pointGeom, pointMat );
+scene.add( points );
+
+// Attempting to draw circles/spheres.
+
+const circleGeom = new THREE.SphereGeometry( 0.1);
+const circleMat = new THREE.MeshBasicMaterial( { color: 0x00303a});
+const circle = new THREE.Mesh( circleGeom, circleMat);
+scene.add(circle);
