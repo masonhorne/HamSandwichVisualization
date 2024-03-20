@@ -11,16 +11,16 @@ scene.background = new THREE.Color(0xFFFFFF);
 
 const controls = new OrbitControls( camera, renderer.domElement );
 controls.zoomToCursor = true;
-controls.minDistance = 10;
-controls.maxDistance = 150;
 controls.enableRotate = false;
+// controls.minDistance = 10.0;
+// controls.maxDistance = 100.0;
 
 
-const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-const cube = new THREE.Mesh( geometry, material );
-scene.add( cube );
-geometry.translate(25, 25, 25);
+// const geometry = new THREE.BoxGeometry( 1, 1, 1 );
+// const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+// const cube = new THREE.Mesh( geometry, material );
+// scene.add( cube );
+// geometry.translate(25, 25, 25);
 
 // camera.position.z = 10;
 camera.position.z = 10;
@@ -68,25 +68,64 @@ threeDButton.addEventListener('click', () => {
 // Oliver is testing how to draw things:
 
 // Draws random points, but they are squares, sadly.
-const vertices = [];
+// const vertices = [];
+const circles = [];
 
 for ( let i = 0; i < 20; i ++ ) {
 	const x = THREE.MathUtils.randFloatSpread( 10 );
 	const y = THREE.MathUtils.randFloatSpread( 10 );
-	const z = THREE.MathUtils.randFloatSpread( 10 );
-
-	vertices.push( x, y, z );
+	const circleGeom = new THREE.SphereGeometry(0.1);
+	const circleMat = new THREE.MeshBasicMaterial( { color: 0x00303a});
+	const circle = new THREE.Mesh( circleGeom, circleMat);
+	circle.position.set(x, y, 0);
+	scene.add(circle);
+	circles.push(circle);
+	// const x = THREE.MathUtils.randFloatSpread( 10 );
+	// const y = THREE.MathUtils.randFloatSpread( 10 );
+	// const z = THREE.MathUtils.randFloatSpread( 10 );
+	// vertices.push( x, y, z );
 }
 
-const pointGeom = new THREE.BufferGeometry();
-pointGeom.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
-const pointMat = new THREE.PointsMaterial( { size: 0.2, color: 0x888888 } );
-const points = new THREE.Points( pointGeom, pointMat );
-scene.add( points );
+// const pointGeom = new THREE.BufferGeometry();
+// pointGeom.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
+// const pointMat = new THREE.PointsMaterial( { size: 0.2, color: 0x888888 } );
+// const points = new THREE.Points( pointGeom, pointMat );
+// scene.add( points );
 
 // Attempting to draw circles/spheres.
 
-const circleGeom = new THREE.SphereGeometry( 0.1);
-const circleMat = new THREE.MeshBasicMaterial( { color: 0x00303a});
-const circle = new THREE.Mesh( circleGeom, circleMat);
-scene.add(circle);
+// const circleGeom = new THREE.SphereGeometry( 0.1);
+// const circleMat = new THREE.MeshBasicMaterial( { color: 0x00303a});
+// const circle = new THREE.Mesh( circleGeom, circleMat);
+// circle.position.set(10, 10, 0);
+// scene.add(circle);
+
+const drawCircle = (x: number, y: number, z: number) => {
+	const circleGeom = new THREE.SphereGeometry(0.1);
+	const circleMat = new THREE.MeshBasicMaterial( { color: 0x00303a});
+	const circle = new THREE.Mesh( circleGeom, circleMat);
+	circle.position.set(x, y, z);
+	scene.add(circle);
+	circles.push(circle);
+}
+
+
+// const hero: any = document.getElementById('hero');
+
+const canvas = document.querySelector('canvas')
+canvas.addEventListener('click', (event) => {
+	var vec = new THREE.Vector3();
+	var pos = new THREE.Vector3();
+	// TODO: GET TARGET Z FROM PROMPT IF WE DO 3D
+	const targetZ = 0;
+	vec.set(
+		( event.clientX / window.innerWidth ) * 2 - 1,
+		- ( event.clientY / window.innerHeight ) * 2 + 1,
+		0.5,
+	);
+	vec.unproject( camera );
+	vec.sub( camera.position ).normalize();
+	var distance = ( targetZ - camera.position.z ) / vec.z;
+	pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
+	drawCircle(pos.x, pos.y, pos.z);
+});

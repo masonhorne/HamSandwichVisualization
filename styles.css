@@ -10,3 +10,13 @@
     background-color: #4f4f4f;
     color: white;
 }
+
+#hero {
+    position: absolute;
+    top: 0;
+    left: 24px;
+}
+
+body {
+    margin: 0;
+}
