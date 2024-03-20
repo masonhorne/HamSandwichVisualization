@@ -13,6 +13,7 @@ const controls = new OrbitControls( camera, renderer.domElement );
 controls.zoomToCursor = true;
 controls.minDistance = 10;
 controls.maxDistance = 150;
+controls.enableRotate = false;
 
 
 const geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -59,13 +60,9 @@ const threeDButton: any = document.getElementById('3d');
 let in3dMode: boolean = false;
 threeDButton.addEventListener('click', () => {
 	in3dMode = !in3dMode;
-	if(in3dMode) {
-		gridHelperXZ.visible = true;
-		gridHelperYZ.visible = true;
-	} else {
-		gridHelperXZ.visible = false;
-		gridHelperYZ.visible = false;
-	}
+	controls.enableRotate = in3dMode;
+	gridHelperXZ.visible = in3dMode;
+	gridHelperYZ.visible = in3dMode;
 });
 
 // Oliver is testing how to draw things:
