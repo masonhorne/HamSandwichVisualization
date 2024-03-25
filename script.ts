@@ -10,22 +10,18 @@ scene.background = new THREE.Color(0xFFFFFF);
 
 
 const controls = new OrbitControls( camera, renderer.domElement );
-controls.zoomToCursor = true;
-controls.enableRotate = false;
-controls.minDistance = 10.0;
-controls.maxDistance = 50.0;
+const controlsInit = () => {
+	controls.reset();
+	controls.zoomToCursor = true;
+	controls.enableRotate = false;
+	controls.minDistance = 10.0;
+	controls.maxDistance = 50.0;
+	camera.position.z = 10;
+	camera.position.x = 0;
+	camera.position.y = 0;
+}
 
-
-// const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-// const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-// const cube = new THREE.Mesh( geometry, material );
-// scene.add( cube );
-// geometry.translate(25, 25, 25);
-
-// camera.position.z = 10;
-camera.position.z = 10;
-
-controls.update();
+controlsInit();
 
 function animate() {
 	requestAnimationFrame( animate );
@@ -63,6 +59,20 @@ threeDButton.addEventListener('click', () => {
 	controls.enableRotate = in3dMode;
 	gridHelperXZ.visible = in3dMode;
 	gridHelperYZ.visible = in3dMode;
+	if(!in3dMode) {
+		if(currentColor === 'green') {
+			currentColor = 'red';
+			objectColorSelection.value = currentColor;
+		}
+		circles.forEach((circle) => {
+			if(circle.material instanceof THREE.MeshBasicMaterial) {
+				if(circle.material.color.getHex() === 0x00FF00) {
+					circle.material.color.setHex(0xFF0000);
+				}
+			}
+		});
+		controlsInit();
+	}
 });
 
 // Oliver is testing how to draw things:
@@ -79,7 +89,31 @@ resetButton.addEventListener('click', () => {
 		scene.remove(circle);
 	});
 	circles.length = 0;
+	// Remove all of the convex closures we were drawing for shapes
+	color2Closure.forEach((meshes) => {
+		meshes.forEach((mesh: any) => {
+			scene.remove(mesh);
+		});
+	});
+	controlsInit();
 });
+
+// Color Button
+const objectColorSelection: any = document.getElementById('object-color');
+let currentColor = 'red';
+objectColorSelection.addEventListener('change', (event: Event) => {
+	const color = (event.target as HTMLInputElement).value;
+	// Invalid swap (only want to allow green if we are in 3D mode)
+	if(!in3dMode && color === 'green') {
+		objectColorSelection.value = currentColor;
+		event.stopPropagation();
+		event.preventDefault();
+	} else {
+		currentColor = color;
+	}
+});
+
+
 
 // for ( let i = 0; i < 20; i ++ ) {
 // 	const x = THREE.MathUtils.randFloatSpread( 10 );
@@ -113,36 +147,130 @@ resetButton.addEventListener('click', () => {
 // Function for drawing circle at given position on canvas
 const drawCircle = (x: number, y: number, z: number) => {
 	const circleGeom = new THREE.SphereGeometry(0.1);
-	const circleMat = new THREE.MeshBasicMaterial( { color: 0x00303a});
+	const color = currentColor === 'red' ? 0xFF0000 : (currentColor === 'blue' ? 0x0000FF : 0x00FF00);
+	const circleMat = new THREE.MeshBasicMaterial( { color: color});
 	const circle = new THREE.Mesh( circleGeom, circleMat);
 	circle.position.set(x, y, z);
 	scene.add(circle);
 	circles.push(circle);
 }
 
+
 // Event listener for drawing circles on click
 const canvas = document.querySelector('canvas')
-canvas.addEventListener('click', (event) => {
-	var vec = new THREE.Vector3();
-	var pos = new THREE.Vector3();
-	// TODO: GET TARGET Z FROM PROMPT IF WE DO 3D
-	const targetZ = 0;
-	vec.set(
-		( event.clientX / window.innerWidth ) * 2 - 1,
-		- ( event.clientY / window.innerHeight ) * 2 + 1,
-		0.5,
-	);
+let drag = false;
+
+canvas.addEventListener('mousedown', (event) => {
+	drag = false;
+});
+
+canvas.addEventListener('mousemove', (event) => {
+	drag = true;
+});
 
 
-	// vec.set(
-	// 	( event.clientX / canvas.width ) * 2 - 1,
-	// 	- ( event.clientY / canvas.height ) * 2 + 1,
-	// 	0.5,
-	// );
 
-	vec.unproject( camera );
-	vec.sub( camera.position ).normalize();
-	var distance = ( targetZ - camera.position.z ) / vec.z;
-	pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
-	drawCircle(pos.x, pos.y, pos.z);
+const color2Closure = new Map();
+
+
+const ccwComparator = (a: THREE.Vector3, b: THREE.Vector3) => {
+	if (a.x >= 0 && b.x < 0)
+		return 1;
+	if (a.x < 0 && b.x >= 0)
+		return -1;
+	if (a.x == 0 && b.x == 0) {
+		if (a.y  >= 0 || b.y  >= 0)
+			return a.y > b.y ? 1 : -1;
+		return b.y > a.y ? 1 : -1;
+	}
+	// compute the cross product of vectors (center -> a) x (center -> b)
+	const det = (a.x) * (b.y) - (b.x) * (a.y);
+	if (det < 0)
+		return 1;
+	if (det > 0)
+		return -1;
+	// points a and b are on the same line from the center
+	// check which point is closer to the center
+	const d1 = (a.x) * (a.x) + (a.y) * (a.y);
+	const d2 = (b.x) * (b.x) + (b.y) * (b.y);
+	return d1 > d2 ? 1 : -1;
+}
+
+
+canvas.addEventListener('mouseup', (event) => {
+	if(!drag) {
+		var vec = new THREE.Vector3();
+		var pos = new THREE.Vector3();
+		let targetZ = 0;
+		// Gather z coordinate if we are viewing 3d mode
+		if(in3dMode) {
+			let response = Number(prompt("Enter the desired Z value for the circle center: "))
+			while(response === null || isNaN(response)) {
+				response = Number(prompt("Invalid input. Please enter a valid number: "));
+			}
+			targetZ = response;
+		}
+		vec.set(
+			( event.clientX / window.innerWidth ) * 2 - 1,
+			- ( event.clientY / window.innerHeight ) * 2 + 1,
+			0.5,
+		);
+		vec.unproject( camera );
+		vec.sub( camera.position ).normalize();
+		var distance = ( targetZ - camera.position.z ) / vec.z;
+		pos.copy( camera.position ).add( vec.multiplyScalar( distance ) );
+		drawCircle(pos.x, pos.y, pos.z);
+		const currentColorHexCode = currentColor === 'red' ? 0xFF0000 : (currentColor === 'blue' ? 0x0000FF : 0x00FF00);
+		const matchingPoints = circles.filter((circle) => {
+			return circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === currentColorHexCode;
+		});
+		if(matchingPoints.length > 2) {
+			console.log(matchingPoints.length);
+			const points = matchingPoints.map((circle) => circle.position);
+
+			// sadly, this is not working as hoped ;'( (still should look into better convex closure displays bc current is scuffed)
+			// let geometry = new THREE.Geometry()
+			// let geometry = new THREE.BufferGeometry();
+			// geometry.setFromPoints(points);
+
+
+
+			// this is dispicable plz forgive me
+			const geometries = [];
+			// Add all possible triangles geometries
+			for(let i = 0; i < points.length; i++){
+				for(let j = i + 1; j < points.length + i; j++){
+					for(let k = j + 1; k < points.length + j; k++){
+						const geometry = new THREE.BufferGeometry();
+						geometry.setFromPoints([points[i], points[j % points.length], points[k % points.length]]);
+						geometries.push(geometry);
+					}
+				}
+			}
+			// Update the meshes with proper settings
+			const meshes = geometries.map((geometry) => {
+				const material = new THREE.MeshBasicMaterial({color: currentColorHexCode});
+				const mesh = new THREE.Mesh(geometry, material);
+				return mesh;
+			});
+			// Remove old meshes
+			if(color2Closure.has(currentColor)) {
+				color2Closure.get(currentColor).forEach((mesh: any) => {
+					scene.remove(mesh);
+				});
+			}
+			// Store the new ones and add to screen
+			color2Closure.set(currentColor, meshes);
+			meshes.forEach((mesh) => {
+				scene.add(mesh);
+			});
+
+
+			// TODO: probably want the math for the cut here
+
+		}
+
+
+
+	}
 });
