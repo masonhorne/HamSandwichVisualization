@@ -12,8 +12,8 @@ scene.background = new THREE.Color(0xFFFFFF);
 const controls = new OrbitControls( camera, renderer.domElement );
 controls.zoomToCursor = true;
 controls.enableRotate = false;
-// controls.minDistance = 10.0;
-// controls.maxDistance = 100.0;
+controls.minDistance = 10.0;
+controls.maxDistance = 50.0;
 
 
 // const geometry = new THREE.BoxGeometry( 1, 1, 1 );
@@ -36,8 +36,8 @@ function animate() {
 animate();
 
 // Grid Settings
-const size = 100;
-const divisions = 100;
+const size = 1000;
+const divisions = 1000;
 const axisColor = new THREE.Color(0x000000);
 const gridColor = new THREE.Color(0xD3D3D3);
 
@@ -69,22 +69,32 @@ threeDButton.addEventListener('click', () => {
 
 // Draws random points, but they are squares, sadly.
 // const vertices = [];
-const circles = [];
+const circles: THREE.Mesh[] = [];
 
-for ( let i = 0; i < 20; i ++ ) {
-	const x = THREE.MathUtils.randFloatSpread( 10 );
-	const y = THREE.MathUtils.randFloatSpread( 10 );
-	const circleGeom = new THREE.SphereGeometry(0.1);
-	const circleMat = new THREE.MeshBasicMaterial( { color: 0x00303a});
-	const circle = new THREE.Mesh( circleGeom, circleMat);
-	circle.position.set(x, y, 0);
-	scene.add(circle);
-	circles.push(circle);
-	// const x = THREE.MathUtils.randFloatSpread( 10 );
-	// const y = THREE.MathUtils.randFloatSpread( 10 );
-	// const z = THREE.MathUtils.randFloatSpread( 10 );
-	// vertices.push( x, y, z );
-}
+
+// Reset button to clear points on canvas
+const resetButton: any = document.getElementById('reset');
+resetButton.addEventListener('click', () => {
+	circles.forEach((circle) => {
+		scene.remove(circle);
+	});
+	circles.length = 0;
+});
+
+// for ( let i = 0; i < 20; i ++ ) {
+// 	const x = THREE.MathUtils.randFloatSpread( 10 );
+// 	const y = THREE.MathUtils.randFloatSpread( 10 );
+// 	const circleGeom = new THREE.SphereGeometry(0.1);
+// 	const circleMat = new THREE.MeshBasicMaterial( { color: 0x00303a});
+// 	const circle = new THREE.Mesh( circleGeom, circleMat);
+// 	circle.position.set(x, y, 0);
+// 	scene.add(circle);
+// 	circles.push(circle);
+// 	// const x = THREE.MathUtils.randFloatSpread( 10 );
+// 	// const y = THREE.MathUtils.randFloatSpread( 10 );
+// 	// const z = THREE.MathUtils.randFloatSpread( 10 );
+// 	// vertices.push( x, y, z );
+// }
 
 // const pointGeom = new THREE.BufferGeometry();
 // pointGeom.setAttribute( 'position', new THREE.Float32BufferAttribute( vertices, 3 ) );
@@ -100,6 +110,7 @@ for ( let i = 0; i < 20; i ++ ) {
 // circle.position.set(10, 10, 0);
 // scene.add(circle);
 
+// Function for drawing circle at given position on canvas
 const drawCircle = (x: number, y: number, z: number) => {
 	const circleGeom = new THREE.SphereGeometry(0.1);
 	const circleMat = new THREE.MeshBasicMaterial( { color: 0x00303a});
@@ -109,9 +120,7 @@ const drawCircle = (x: number, y: number, z: number) => {
 	circles.push(circle);
 }
 
-
-// const hero: any = document.getElementById('hero');
-
+// Event listener for drawing circles on click
 const canvas = document.querySelector('canvas')
 canvas.addEventListener('click', (event) => {
 	var vec = new THREE.Vector3();
@@ -123,6 +132,14 @@ canvas.addEventListener('click', (event) => {
 		- ( event.clientY / window.innerHeight ) * 2 + 1,
 		0.5,
 	);
+
+
+	// vec.set(
+	// 	( event.clientX / canvas.width ) * 2 - 1,
+	// 	- ( event.clientY / canvas.height ) * 2 + 1,
+	// 	0.5,
+	// );
+
 	vec.unproject( camera );
 	vec.sub( camera.position ).normalize();
 	var distance = ( targetZ - camera.position.z ) / vec.z;
