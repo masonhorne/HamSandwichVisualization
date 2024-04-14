@@ -1,7 +1,7 @@
 const path = require('path');
 
 module.exports = {
-	entry: './script.ts',
+	entry: './app.ts',
 	mode: 'development',
 	watch: true,
 	module: {
@@ -17,7 +17,7 @@ module.exports = {
 		extensions: [ '.tsx', '.ts', '.js' ],
 	},
 	output: {
-		filename: 'script.js',
+		filename: 'app.js',
 		path: __dirname,
 	},
 };
