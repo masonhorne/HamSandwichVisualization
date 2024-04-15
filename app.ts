@@ -32,11 +32,6 @@ class App {
         this.animate();
     }
 
-    // private animate() {
-    //     requestAnimationFrame( this.animate );
-    //     this.controls.update();
-    //     this.renderer.render( this.scene, this.camera );
-    // }
     private animate = () => {
         requestAnimationFrame( this.animate );
         this.controls.update();
@@ -45,15 +40,20 @@ class App {
 
 
     private interactiveCanvasInit() {
+        const epsilon = 1e-3;
+        let prevX = 0, prevY = 0;
         // Event listener for drawing circles on click
         const canvas = document.querySelector('canvas')
         canvas.addEventListener('mousedown', (event) => {
             this.drag = false;
+            prevX = event.clientX;
+            prevY = event.clientY;
         });
         canvas.addEventListener('mousemove', (event) => {
-            this.drag = true;
+            this.drag = event.clientX - prevX > epsilon || event.clientY - prevY > epsilon;
         });
         canvas.addEventListener('mouseup', (event) => {
+            prevX = 0, prevY = 0;
             if(!this.drag) {
                 var vec = new THREE.Vector3();
                 var pos = new THREE.Vector3();
@@ -81,6 +81,7 @@ class App {
             });
             this.circles.length = 0;
             this.scene.remove(this.cut);
+            this.cut = undefined;
             this.controlsInit();
         });
     }
@@ -118,10 +119,10 @@ class App {
         this.scene.add( gridHelper );
     }
 
-    drawLine = (x1: number, y1: number, x2: number, y2: number) => {
+    drawLine = (x1: number, y1: number, x2: number, y2: number, color = 0x000000) => {
         const lineGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x1, y1, 0), new THREE.Vector3(x2, y2, 0)]);
         const lineMat = new THREE.LineBasicMaterial({
-            color: 0x000000,
+            color: color,
             linewidth: 1,
             linecap: 'round',
             linejoin: 'round', 
@@ -142,12 +143,15 @@ class App {
     }
 
     generalBisector = (m: number, b: number, color: number) => {
-        let above = 0, below = 0;
+        let above = 0, below = 0, epsilon = 1e-3;
         const pointSet = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === color);
         pointSet.forEach((circle) => {
             const y = circle.position.x * m + b;
-            if(y < circle.position.y) below++;
-            else if(y > circle.position.y) above++;
+            // Use epsilon to avoid floating point errors
+            if(Math.abs(circle.position.y - y) > epsilon){
+                if(y < circle.position.y) below++;
+                else if(y > circle.position.y) above++;
+            }
         });
         return below <= pointSet.length / 2 && above <= pointSet.length / 2;
     }
@@ -162,32 +166,34 @@ class App {
         return left <= pointSet.length / 2 && right <= pointSet.length / 2;
     }
 
-    hamsandwich = () => {
+    private async hamsandwich() {
         this.scene.remove(this.cut);
+        this.cut = undefined;
         const redCircles = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === this.RED);
         const blueCircles = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === this.BLUE);
-        for(let i = 0; i < redCircles.length; i++) {
-            for(let j = 0; j < blueCircles.length; j++) {
+        for(let i = 0; i < redCircles.length && this.cut === undefined; i++) {
+            for(let j = 0; j < blueCircles.length && this.cut === undefined; j++) {
                 const circle1 = redCircles[i];
                 const circle2 = blueCircles[j];
                 const x1 = circle1.position.x, y1 = circle1.position.y;
                 const x2 = circle2.position.x, y2 = circle2.position.y;
                 const m = (y2 - y1) / (x2 - x1);
                 const b = y1 - m * x1;
-
-                if(x1 === x2 && this.verticalBisector(x1, this.RED) && this.verticalBisector(x1, this.BLUE)) {
-                    const sx = x1, sy = -500, ey = 500, ex = x1;
-                    this.cut = this.drawLine(sx, sy, ex, ey);
-                    return;
-                } else if(this.generalBisector(m, b, this.RED) && this.generalBisector(m, b, this.BLUE)) {
-                    const sx = -500, ex = 500;
-                    const sy = m * sx + b, ey = m * ex + b;
-                    this.cut = this.drawLine(sx, sy, ex, ey);
-                    return;
-                }  
+                // Draw candidate line for bisector based on case
+                const sx = x1 === x2 ? x1 : -500, ex = x1 === x2 ? x1 : 500;
+                const sy = x1 === x2 ? -500 : m * sx + b, ey = x1 === x2 ? 500 : m * ex + b;
+                const candidate = this.drawLine(sx, sy, ex, ey);
+                // Check if candidate is a valid ham sandwich cut
+                if((x1 === x2 && this.verticalBisector(x1, this.RED) && this.verticalBisector(x1, this.BLUE)) || (x1 !== x2 && this.generalBisector(m, b, this.RED) && this.generalBisector(m, b, this.BLUE))) this.cut = this.drawLine(sx, sy, ex, ey, this.GREEN);
+                // If no cut, wait 1.5 seconds to display candidate briefly
+                if(!this.cut) await this.sleep(1500);
+                // Remove the current candidate line
+                this.scene.remove(candidate);
             }
         }
     }
+
+    sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay))
 }
 
 const app = new App();
