@@ -141,7 +141,7 @@ class App {
         this.circles.push(circle);
     }
 
-    bisects = (m: number, b: number, color: number) => {
+    generalBisector = (m: number, b: number, color: number) => {
         let above = 0, below = 0;
         const pointSet = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === color);
         pointSet.forEach((circle) => {
@@ -150,6 +150,16 @@ class App {
             else if(y > circle.position.y) above++;
         });
         return below <= pointSet.length / 2 && above <= pointSet.length / 2;
+    }
+
+    verticalBisector = (x: number, color: number) => {
+        let left = 0, right = 0;
+        const pointSet = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === color);
+        pointSet.forEach((circle) => {
+            if (circle.position.x < x) left++;
+            else if (circle.position.x > x) right++;
+        });
+        return left <= pointSet.length / 2 && right <= pointSet.length / 2;
     }
 
     hamsandwich = () => {
@@ -164,12 +174,17 @@ class App {
                 const x2 = circle2.position.x, y2 = circle2.position.y;
                 const m = (y2 - y1) / (x2 - x1);
                 const b = y1 - m * x1;
-                if(this.bisects(m, b, this.RED) && this.bisects(m, b, this.BLUE)) {
+
+                if(x1 === x2 && this.verticalBisector(x1, this.RED) && this.verticalBisector(x1, this.BLUE)) {
+                    const sx = x1, sy = -500, ey = 500, ex = x1;
+                    this.cut = this.drawLine(sx, sy, ex, ey);
+                    return;
+                } else if(this.generalBisector(m, b, this.RED) && this.generalBisector(m, b, this.BLUE)) {
                     const sx = -500, ex = 500;
                     const sy = m * sx + b, ey = m * ex + b;
                     this.cut = this.drawLine(sx, sy, ex, ey);
                     return;
-                }
+                }  
             }
         }
     }
