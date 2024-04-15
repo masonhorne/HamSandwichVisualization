@@ -9,9 +9,11 @@ class App {
     private renderer: THREE.WebGLRenderer;
     private circles: THREE.Mesh[] = [];
     private cut: THREE.Line;
-    private RED: number = 0xFF0000;
-    private BLUE: number = 0x0000FF;
-    private GREEN: number = 0x00FF00;
+    private RED: number = 0xbf212f;
+    private BLUE: number = 0x264b96;
+    private GREEN: number = 0x27b376;
+    private WHITE: number = 0xFFFFFF;
+    private EPSILON: number = 1e-3;
     private currentColor: string = 'red';
     private drag: boolean = false;
 
@@ -22,7 +24,7 @@ class App {
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize( window.innerWidth, window.innerHeight );
         document.body.appendChild( this.renderer.domElement );
-        this.scene.background = new THREE.Color(0xFFFFFF);
+        this.scene.background = new THREE.Color(this.WHITE);
         this.controls = new OrbitControls( this.camera, this.renderer.domElement );
         this.controlsInit();
         this.gridInit();
@@ -40,7 +42,6 @@ class App {
 
 
     private interactiveCanvasInit() {
-        const epsilon = 1e-3;
         let prevX = 0, prevY = 0;
         // Event listener for drawing circles on click
         const canvas = document.querySelector('canvas')
@@ -50,7 +51,7 @@ class App {
             prevY = event.clientY;
         });
         canvas.addEventListener('mousemove', (event) => {
-            this.drag = event.clientX - prevX > epsilon || event.clientY - prevY > epsilon;
+            this.drag = event.clientX - prevX > this.EPSILON || event.clientY - prevY > this.EPSILON;
         });
         canvas.addEventListener('mouseup', (event) => {
             prevX = 0, prevY = 0;
@@ -89,6 +90,7 @@ class App {
     private colorSelectorInit() {
         const objectColorSelection: any = document.getElementById('object-color');
         this.currentColor = 'red';
+        objectColorSelection.value = this.currentColor;
         objectColorSelection.addEventListener('change', (event: Event) => {
             const color = (event.target as HTMLInputElement).value;
             this.currentColor = color;
@@ -123,7 +125,7 @@ class App {
         const lineGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x1, y1, 0), new THREE.Vector3(x2, y2, 0)]);
         const lineMat = new THREE.LineBasicMaterial({
             color: color,
-            linewidth: 1,
+            linewidth: 4,
             linecap: 'round',
             linejoin: 'round', 
         });
@@ -143,15 +145,14 @@ class App {
     }
 
     generalBisector = (m: number, b: number, color: number) => {
-        let above = 0, below = 0, epsilon = 1e-3;
+        let above = 0, below = 0;
         const pointSet = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === color);
         pointSet.forEach((circle) => {
             const y = circle.position.x * m + b;
             // Use epsilon to avoid floating point errors
-            if(Math.abs(circle.position.y - y) > epsilon){
-                if(y < circle.position.y) below++;
-                else if(y > circle.position.y) above++;
-            }
+            if(Math.abs(circle.position.y - y) < this.EPSILON) return;
+            if(y < circle.position.y) below++;
+            else if(y > circle.position.y) above++;
         });
         return below <= pointSet.length / 2 && above <= pointSet.length / 2;
     }
@@ -160,6 +161,7 @@ class App {
         let left = 0, right = 0;
         const pointSet = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === color);
         pointSet.forEach((circle) => {
+            if(Math.abs(circle.position.x - x) < this.EPSILON) return;
             if (circle.position.x < x) left++;
             else if (circle.position.x > x) right++;
         });
