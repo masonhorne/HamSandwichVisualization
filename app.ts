@@ -5,7 +5,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 class App {
     private controls: OrbitControls;
     private scene: THREE.Scene;
-    private camera: THREE.PerspectiveCamera;
+    private camera: THREE.OrthographicCamera;
     private renderer: THREE.WebGLRenderer;
     private circles: THREE.Mesh[] = [];
     private cut: THREE.Line;
@@ -20,17 +20,20 @@ class App {
     constructor() {
         // Initialize scene for drawing and orbit controls
         this.scene = new THREE.Scene();
-        this.camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+        this.camera = new THREE.OrthographicCamera( window.innerWidth / - 2, window.innerWidth / 2, window.innerHeight / 2, window.innerHeight / - 2, 1, 1000 );
         this.renderer = new THREE.WebGLRenderer();
         this.renderer.setSize( window.innerWidth, window.innerHeight );
         document.body.appendChild( this.renderer.domElement );
         this.scene.background = new THREE.Color(this.WHITE);
         this.controls = new OrbitControls( this.camera, this.renderer.domElement );
+        // Run other initialization functions for app performance
         this.controlsInit();
         this.gridInit();
         this.resetButtonInit();
         this.colorSelectorInit();
         this.interactiveCanvasInit();
+        this.windowResizeInit();
+        // Begin animation of the app
         this.animate();
     }
 
@@ -40,9 +43,23 @@ class App {
         this.renderer.render( this.scene, this.camera );
     }
 
+    private windowResizeInit() {
+        // Resize event listener for responsive canvas
+        window.addEventListener('resize', () => {
+            this.camera.left = -window.innerWidth / 2;
+            this.camera.right = window.innerWidth / 2;
+            this.camera.top = window.innerHeight / 2;
+            this.camera.bottom = -window.innerHeight / 2;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+    }
 
     private interactiveCanvasInit() {
+        // Variables for drag detection and click location
         let prevX = 0, prevY = 0;
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
         // Event listener for drawing circles on click
         const canvas = document.querySelector('canvas')
         canvas.addEventListener('mousedown', (event) => {
@@ -56,26 +73,27 @@ class App {
         canvas.addEventListener('mouseup', (event) => {
             prevX = 0, prevY = 0;
             if(!this.drag) {
-                var vec = new THREE.Vector3();
-                var pos = new THREE.Vector3();
-                let targetZ = 0;
-                vec.set(
-                    ( event.clientX / window.innerWidth ) * 2 - 1,
-                    - ( event.clientY / window.innerHeight ) * 2 + 1,
-                    0.5,
-                );
-                vec.unproject( this.camera );
-                vec.sub( this.camera.position ).normalize();
-                var distance = ( targetZ - this.camera.position.z ) / vec.z;
-                pos.copy( this.camera.position ).add( vec.multiplyScalar( distance ) );
-                this.drawCircle(pos.x, pos.y, pos.z);
-                this.hamsandwich();
+                // Calculate normalized device coordinates (NDC) from mouse position
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+                // Update the raycaster with the NDC and camera
+                raycaster.setFromCamera(mouse, this.camera);
+                // Calculate the intersection of the raycaster with the scene
+                const intersects = raycaster.intersectObjects(this.scene.children);
+                if (intersects.length > 0) {
+                    // The first intersection point will be the click location in world coordinates
+                    const clickLocation = intersects[0].point;
+                    this.drawCircle(clickLocation.x, clickLocation.y, 0);
+                    this.hamsandwich();
+                }
             }
         });
     }
 
     private resetButtonInit() {
+        // Get the reset button
         const resetButton: any = document.getElementById('reset');
+        // Add the event listener to reset scene to default state
         resetButton.addEventListener('click', () => {
             this.circles.forEach((circle) => {
                 this.scene.remove(circle);
@@ -88,7 +106,9 @@ class App {
     }
 
     private colorSelectorInit() {
+        // Get the color selector
         const objectColorSelection: any = document.getElementById('object-color');
+        // Set values and event listener for swapping
         this.currentColor = 'red';
         objectColorSelection.value = this.currentColor;
         objectColorSelection.addEventListener('change', (event: Event) => {
@@ -102,9 +122,9 @@ class App {
         this.controls.reset();
         this.controls.zoomToCursor = true;
         this.controls.enableRotate = false;
-        this.controls.minDistance = 10.0;
-        this.controls.maxDistance = 50.0;
-        this.camera.position.z = 10;
+        this.controls.minZoom = 30;
+        this.controls.maxZoom = 100;
+        this.camera.position.z = 20;
         this.camera.position.x = 0;
         this.camera.position.y = 0;
     }
@@ -134,8 +154,8 @@ class App {
         return line;
     }
 
-    drawCircle = (x: number, y: number, z: number) => {
-        const circleGeom = new THREE.SphereGeometry(0.1);
+    drawCircle = (x: number, y: number, z: number, r: number = 0.2) => {
+        const circleGeom = new THREE.SphereGeometry(r);
         const color = this.currentColor === 'red' ? this.RED : (this.currentColor === 'blue' ? this.BLUE : this.GREEN);
         const circleMat = new THREE.MeshBasicMaterial( { color: color});
         const circle = new THREE.Mesh( circleGeom, circleMat);
@@ -161,20 +181,25 @@ class App {
         let left = 0, right = 0;
         const pointSet = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === color);
         pointSet.forEach((circle) => {
+            // Use epsilon to avoid floating point errors
             if(Math.abs(circle.position.x - x) < this.EPSILON) return;
-            if (circle.position.x < x) left++;
+            if(circle.position.x < x) left++;
             else if (circle.position.x > x) right++;
         });
         return left <= pointSet.length / 2 && right <= pointSet.length / 2;
     }
 
     private async hamsandwich() {
+        // Reset previous cut if present
         this.scene.remove(this.cut);
         this.cut = undefined;
+        // Find the red and blue pointset
         const redCircles = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === this.RED);
         const blueCircles = this.circles.filter((circle) => circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === this.BLUE);
+        // Iterate through all combinations of points
         for(let i = 0; i < redCircles.length && this.cut === undefined; i++) {
             for(let j = 0; j < blueCircles.length && this.cut === undefined; j++) {
+                // Calculate the slope and y-intercept of the bisector
                 const circle1 = redCircles[i];
                 const circle2 = blueCircles[j];
                 const x1 = circle1.position.x, y1 = circle1.position.y;
@@ -187,14 +212,15 @@ class App {
                 const candidate = this.drawLine(sx, sy, ex, ey);
                 // Check if candidate is a valid ham sandwich cut
                 if((x1 === x2 && this.verticalBisector(x1, this.RED) && this.verticalBisector(x1, this.BLUE)) || (x1 !== x2 && this.generalBisector(m, b, this.RED) && this.generalBisector(m, b, this.BLUE))) this.cut = this.drawLine(sx, sy, ex, ey, this.GREEN);
-                // If no cut, wait 1.5 seconds to display candidate briefly
-                if(!this.cut) await this.sleep(1500);
+                // If no cut, wait 1 second to display candidate briefly
+                if(!this.cut) await this.sleep(1000);
                 // Remove the current candidate line
                 this.scene.remove(candidate);
             }
         }
     }
 
+    // Sleep helper for animating candidate lines
     sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay))
 }
 
