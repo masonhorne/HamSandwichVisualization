@@ -149,8 +149,8 @@ class App {
     private controlsInit() {
         // Reset camera and controls to default state
         this.controls.reset();
+        this.controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
         this.controls.zoomToCursor = true;
-        // this.controls.enableRotate = false;
         this.controls.minZoom = 20;
         this.controls.maxZoom = 150;
         this.camera.position.z = 500;
