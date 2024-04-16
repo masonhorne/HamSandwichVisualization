@@ -100,6 +100,8 @@ class App {
         const resetButton: any = document.getElementById('reset');
         // Add the event listener to reset scene to default state
         resetButton.addEventListener('click', () => {
+            // Prevent reset while algorithm is running to avoid undefined behavior
+            if(this.runningAlgorithm) return;
             this.circles.forEach((circle) => {
                 this.scene.remove(circle);
             });
