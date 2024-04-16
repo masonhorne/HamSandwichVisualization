@@ -12,6 +12,7 @@ class App {
     private currentColor: string = 'red';
     private drag: boolean = false;
     private currentAlgorithm: Algorithm;
+    private runningAlgorithm: boolean = false;
 
     constructor() {
         // Initialize scene for drawing and orbit controls
@@ -72,7 +73,7 @@ class App {
         });
         canvas.addEventListener('mouseup', async (event) => {
             prevX = 0, prevY = 0;
-            if(!this.drag) {
+            if(!this.drag && !this.runningAlgorithm) {
                 // Use plan and camera position to find intersection of raycaster with drawing plane
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -84,11 +85,12 @@ class App {
                 const circle: THREE.Mesh = drawCircle(clickLocation.x, clickLocation.y, 0, 0.2, this.currentColor === 'red' ? RED : BLUE);
                 this.scene.add(circle);
                 this.circles.push(circle);
+                this.runningAlgorithm = true;
                 this.currentAlgorithm.hamsandwich(
                     this.circles.filter((circle) => circle instanceof THREE.Mesh && circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === RED).map((circle) => circle.position),
                     this.circles.filter((circle) => circle instanceof THREE.Mesh && circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === BLUE).map((circle) => circle.position),
                     this.scene
-                );
+                ).then(() => this.runningAlgorithm = false);
             }
         });
     }
