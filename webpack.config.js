@@ -2,7 +2,7 @@ const path = require('path');
 const TerserPlugin = require("terser-webpack-plugin");
 
 module.exports = {
-	entry: './app.ts',
+	entry: './src/app.ts',
 	mode: 'production',
 	module: {
 		rules: [
