@@ -6,6 +6,13 @@ export const WHITE: number = 0xFFFFFF;
 export const EPSILON: number = 1e-3;
 export const sleep = (delay: number) => new Promise((resolve) => setTimeout(resolve, delay));
 
+export const drawPerimeter: (hull: THREE.Vector3[], color?: number) => THREE.LineLoop = (hull: THREE.Vector3[], color: number = 0x000000) =>{
+    const convexHullGeometry = new THREE.BufferGeometry();
+    convexHullGeometry.setFromPoints(hull);
+    const material = new THREE.MeshBasicMaterial( { color: color } );
+    return new THREE.LineLoop( convexHullGeometry, material );
+}
+
 export const drawLine: (x1: number, y1: number, x2: number, y2: number, color?: number) => THREE.Line = (x1: number, y1: number, x2: number, y2: number, color: number = 0x000000) => {
     const lineGeom = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(x1, y1, 0), new THREE.Vector3(x2, y2, 0)]);
     const lineMat = new THREE.LineBasicMaterial({

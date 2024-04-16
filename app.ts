@@ -102,8 +102,7 @@ class App {
                 this.scene.remove(circle);
             });
             this.circles.length = 0;
-            this.scene.remove(this.currentAlgorithm.cut);
-            this.currentAlgorithm.cut = undefined;
+            this.currentAlgorithm.reset(this.scene);
             this.controlsInit();
         });
     }
@@ -139,8 +138,8 @@ class App {
             // TODO: Implement other algorithms
             // case 'area':
             //     return ALGORITHMS.AREA_HAMSANDWICH;
-            // case 'lines':
-            //     return ALGORITHMS.LINE_HAMSANDWICH;
+            case 'perimeter':
+                return ALGORITHMS.PERIMETER_HAMSANDWICH;
             default:
                 return ALGORITHMS.POINT_HAMSANDWICH;
         }
