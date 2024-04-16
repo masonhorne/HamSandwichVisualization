@@ -57,6 +57,9 @@ class App {
         let prevX = 0, prevY = 0;
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
+        const plane = new THREE.Plane();
+        const planeNormal = new THREE.Vector3();
+        const point = new THREE.Vector3();
         // Event listener for drawing circles on click
         const canvas = document.querySelector('canvas')
         canvas.addEventListener('mousedown', (event) => {
@@ -70,25 +73,22 @@ class App {
         canvas.addEventListener('mouseup', async (event) => {
             prevX = 0, prevY = 0;
             if(!this.drag) {
-                // Calculate normalized device coordinates (NDC) from mouse position
+                // Use plan and camera position to find intersection of raycaster with drawing plane
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
-                // Update the raycaster with the NDC and camera
+                planeNormal.copy(this.camera.position).normalize();
+                plane.setFromNormalAndCoplanarPoint(planeNormal, this.scene.position);
                 raycaster.setFromCamera(mouse, this.camera);
-                // Calculate the intersection of the raycaster with the scene
-                const intersects = raycaster.intersectObjects(this.scene.children);
-                if (intersects.length > 0) {
-                    // The first intersection point will be the click location in world coordinates
-                    const clickLocation = intersects[0].point;
-                    const circle: THREE.Mesh = drawCircle(clickLocation.x, clickLocation.y, 0, 0.2, this.currentColor === 'red' ? RED : BLUE);
-                    this.scene.add(circle);
-                    this.circles.push(circle);
-                    this.currentAlgorithm.hamsandwich(
-                        this.circles.filter((circle) => circle instanceof THREE.Mesh && circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === RED).map((circle) => circle.position),
-                        this.circles.filter((circle) => circle instanceof THREE.Mesh && circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === BLUE).map((circle) => circle.position),
-                        this.scene
-                    );
-                }
+                // Draw the click location as a circle
+                const clickLocation = raycaster.ray.intersectPlane(plane, point);
+                const circle: THREE.Mesh = drawCircle(clickLocation.x, clickLocation.y, 0, 0.2, this.currentColor === 'red' ? RED : BLUE);
+                this.scene.add(circle);
+                this.circles.push(circle);
+                this.currentAlgorithm.hamsandwich(
+                    this.circles.filter((circle) => circle instanceof THREE.Mesh && circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === RED).map((circle) => circle.position),
+                    this.circles.filter((circle) => circle instanceof THREE.Mesh && circle.material instanceof THREE.MeshBasicMaterial && circle.material.color.getHex() === BLUE).map((circle) => circle.position),
+                    this.scene
+                );
             }
         });
     }
@@ -126,6 +126,7 @@ class App {
         algorithmSelection.value = 'points';
         this.currentAlgorithm = this.algorithmValueToFunction(algorithmSelection.value);
         algorithmSelection.addEventListener('change', (event: Event) => {
+            this.currentAlgorithm.reset(this.scene);
             const algorithm = (event.target as HTMLInputElement).value;
             this.currentAlgorithm = this.algorithmValueToFunction(algorithm);
         });
