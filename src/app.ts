@@ -138,13 +138,15 @@ class App {
 
     private algorithmValueToFunction(algorithm: string) {
         switch(algorithm) {
+            case 'naive-points':
+                return ALGORITHMS.NAIVE_POINT_HAMSANDWICH;
             case 'points':
                 return ALGORITHMS.POINT_HAMSANDWICH;
             // TODO: Implement other algorithms
             // case 'area':
             //     return ALGORITHMS.AREA_HAMSANDWICH;
             case 'perimeter':
-                return ALGORITHMS.PERIMETER_HAMSANDWICH;
+                return ALGORITHMS.NEW_PERIMETER_HAMSANDWICH;
             default:
                 return ALGORITHMS.POINT_HAMSANDWICH;
         }
