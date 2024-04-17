@@ -12,6 +12,7 @@ In fact, Ham sandwich cuts can also be generalized to $d$ dimensions where $d$ o
 Given a line $l$, and two point sets $A$ and $B$, one can determine if $l$ is a ham sandwich cut of $A$ and $B$ in linear time.
 Therefore, a naive algorithm would be to try every line determined by a pair of points from $A\times B$.
 This is worst-case cubic to compute.
+The visualization algorithm we have implemented for ham sandwich cuts of $2$D point sets is based on that described in Conrado's thesis [3].
 
 Ham sandwich cuts of two finite point sets in the plane was solved optimally in $O(n)$ time by Lo et. al [1].
 Their approach is to find a point in the dual setting that lies above and below at most half of the dual lines.
@@ -23,6 +24,8 @@ Ham sandwich cuts of the area of two non-intersecting polygons was solved optima
 [1] Lo, C. Y., Matoušek, J., & Steiger, W. (1994). Algorithms for ham-sandwich cuts. Discrete & Computational Geometry, 11, 433-452.
 
 [2] Stojmenovic, I. (1991). Bisections and ham-sandwich cuts of convex polygons and polyhedra. Inf. Process. Lett., 38(1), 15-21.
+
+[3] Conrado, G. K. Algorithms for the 2D ham sandwich problem.
 
 ## Developer Instructions
 1. Before beginning, make sure that your system has [NodeJS](https://nodejs.org/en) installed.
