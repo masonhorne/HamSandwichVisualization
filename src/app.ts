@@ -142,11 +142,10 @@ class App {
                 return ALGORITHMS.NAIVE_POINT_HAMSANDWICH;
             case 'points':
                 return ALGORITHMS.POINT_HAMSANDWICH;
-            // TODO: Implement other algorithms
-            // case 'area':
-            //     return ALGORITHMS.AREA_HAMSANDWICH;
+            case 'area':
+                return ALGORITHMS.AREA_HAMSANDWICH;
             case 'perimeter':
-                return ALGORITHMS.NEW_PERIMETER_HAMSANDWICH;
+                return ALGORITHMS.PERIMETER_HAMSANDWICH;
             default:
                 return ALGORITHMS.POINT_HAMSANDWICH;
         }
