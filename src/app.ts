@@ -74,6 +74,8 @@ class App {
         canvas.addEventListener('mouseup', async (event) => {
             prevX = 0, prevY = 0;
             if(!this.drag && !this.runningAlgorithm) {
+                const instructions = document.querySelector('#instructions');
+                instructions.classList.add('hidden');
                 // Use plan and camera position to find intersection of raycaster with drawing plane
                 mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -95,20 +97,22 @@ class App {
         });
     }
 
+    private reset() {
+        // Prevent reset while algorithm is running to avoid undefined behavior
+        if(this.runningAlgorithm) return;
+        this.circles.forEach((circle) => {
+            this.scene.remove(circle);
+        });
+        this.circles.length = 0;
+        this.currentAlgorithm.reset(this.scene);
+        this.controlsInit();
+    }
+
     private resetButtonInit() {
         // Get the reset button
         const resetButton: any = document.getElementById('reset');
         // Add the event listener to reset scene to default state
-        resetButton.addEventListener('click', () => {
-            // Prevent reset while algorithm is running to avoid undefined behavior
-            if(this.runningAlgorithm) return;
-            this.circles.forEach((circle) => {
-                this.scene.remove(circle);
-            });
-            this.circles.length = 0;
-            this.currentAlgorithm.reset(this.scene);
-            this.controlsInit();
-        });
+        resetButton.addEventListener('click', () => this.reset());
     }
 
     private colorSelectorInit() {
@@ -131,12 +135,14 @@ class App {
         this.currentAlgorithm = this.algorithmValueToFunction(algorithmSelection.value);
         algorithmSelection.addEventListener('change', (event: Event) => {
             this.currentAlgorithm.reset(this.scene);
+            this.reset();
             const algorithm = (event.target as HTMLInputElement).value;
             this.currentAlgorithm = this.algorithmValueToFunction(algorithm);
         });
     }
 
     private algorithmValueToFunction(algorithm: string) {
+        // Convert string value to algorithm function
         switch(algorithm) {
             case 'naive-points':
                 return ALGORITHMS.NAIVE_POINT_HAMSANDWICH;
@@ -156,9 +162,8 @@ class App {
         this.controls.reset();
         this.controls.mouseButtons.LEFT = THREE.MOUSE.PAN;
         this.controls.zoomToCursor = true;
-        this.controls.minZoom = 20;
-        this.controls.maxZoom = 150;
-        this.camera.position.z = 500;
+        this.controls.minZoom = 25;
+        this.camera.position.z = 25;
         this.camera.position.x = 0;
         this.camera.position.y = 0;
     }

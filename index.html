@@ -6,7 +6,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
   </head>
   <body>
-    <div id="hero">
+    <div class="header" id="hero">
       <h1>Ham Sandwich Theorem</h1>
       <div id="reset" class="btn">Reset</div>
       <label for="object-color">Point Color: </label>
@@ -14,13 +14,16 @@
         <option value="red">Red</option>
         <option value="blue">Blue</option>
       </select>
-      <label for="algorithm">Algorithm: </label>
+      <label for="algorithm">Measure: </label>
       <select name="algorithm" id="algorithm">
         <option value="area">Area</option>
         <option value="naive-points">Naive Points</option>
         <option value="perimeter">Perimeter</option>
         <option value="points">Points</option>
       </select>
+    </div>
+    <div class="header" id="instructions">
+      <p>Click on the canvas to add points.</p>
     </div>
   </body>
   <script src="app.js"></script>
